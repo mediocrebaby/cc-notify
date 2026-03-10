@@ -79,6 +79,13 @@ elseif(APPLE)
         COMMENT "Ad-hoc signing cc-notify.app"
     )
 
+    # Register with Launch Services so the notification icon stays up-to-date.
+    add_custom_command(TARGET cc-notify POST_BUILD
+        COMMAND /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+                -f "$<TARGET_BUNDLE_DIR:cc-notify>"
+        COMMENT "Registering cc-notify.app with Launch Services"
+    )
+
 elseif(UNIX)
   # Linux / WSL: libnotify C API (→ D-Bus org.freedesktop.Notifications)
   find_package(PkgConfig REQUIRED)
