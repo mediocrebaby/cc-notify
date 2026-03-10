@@ -61,6 +61,17 @@ elseif(APPLE)
         MACOSX_BUNDLE_INFO_PLIST      "${CMAKE_SOURCE_DIR}/macos/Info.plist.in"
     )
 
+    # Copy icon into the app bundle's Resources folder.
+    set(ICON_SRC "${CMAKE_SOURCE_DIR}/macos/AppIcon.icns")
+    add_custom_command(TARGET cc-notify POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+                "$<TARGET_BUNDLE_DIR:cc-notify>/Contents/Resources"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${ICON_SRC}"
+                "$<TARGET_BUNDLE_DIR:cc-notify>/Contents/Resources/AppIcon.icns"
+        COMMENT "Copying app icon into bundle"
+    )
+
     # Ad-hoc code sign so macOS will honour UNUserNotificationCenter requests.
     add_custom_command(TARGET cc-notify POST_BUILD
         COMMAND codesign --force --deep --sign -
