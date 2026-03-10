@@ -10,62 +10,88 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ── Executable ────────────────────────────────────────────────────────────────
-add_executable(cc-notify src/main.cpp)
+
+
+if(APPLE)
+  add_executable(cc-notify MACOSX_BUNDLE src/main.cpp)
+else()
+  add_executable(cc-notify src/main.cpp)
+endif()
 
 # ── Platform-specific sources and link libraries ──────────────────────────────
 
 if(WIN32)
-    # Windows: C++/WinRT via Windows SDK headers + windowsapp.lib
-    target_sources(cc-notify PRIVATE src/notifier_win.cpp)
-    target_link_libraries(cc-notify PRIVATE windowsapp)
+  # Windows: C++/WinRT via Windows SDK headers + windowsapp.lib
+  target_sources(cc-notify PRIVATE src/notifier_win.cpp)
+  target_link_libraries(cc-notify PRIVATE windowsapp)
 
-    # /utf-8   — treat source as UTF-8 (required for non-ASCII in string literals)
-    # /EHsc    — enable C++ exception handling (required by winrt headers)
-    # /W4 /WX  — warnings as errors
-    target_compile_options(cc-notify PRIVATE /utf-8 /EHsc /W4 /WX)
+  # /utf-8   — treat source as UTF-8 (required for non-ASCII in string literals)
+  # /EHsc    — enable C++ exception handling (required by winrt headers)
+  # /W4 /WX  — warnings as errors
+  target_compile_options(cc-notify PRIVATE /utf-8 /EHsc /W4 /WX)
 
-    # Static CRT: single portable .exe, no VCRUNTIME redistributable needed.
-    set_property(TARGET cc-notify PROPERTY
+  # Static CRT: single portable .exe, no VCRUNTIME redistributable needed.
+  set_property(TARGET cc-notify PROPERTY
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    target_compile_definitions(cc-notify PRIVATE _CRT_SECURE_NO_WARNINGS)
+  target_compile_definitions(cc-notify PRIVATE _CRT_SECURE_NO_WARNINGS)
 
 elseif(APPLE)
-    # macOS: Objective-C++ source + UserNotifications framework (macOS 10.14+)
-    enable_language(OBJCXX)
-    set(CMAKE_OBJCXX_STANDARD 17)
-    set(CMAKE_OBJCXX_STANDARD_REQUIRED ON)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14"
+  # macOS: Objective-C++ source + UserNotifications framework (macOS 10.14+)
+  enable_language(OBJCXX)
+  set(CMAKE_OBJCXX_STANDARD 17)
+  set(CMAKE_OBJCXX_STANDARD_REQUIRED ON)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14"
         CACHE STRING "Minimum macOS deployment version")
 
-    target_sources(cc-notify PRIVATE src/notifier_mac.mm)
-    target_link_libraries(cc-notify PRIVATE
-        "-framework Foundation"
+  target_sources(cc-notify PRIVATE src/notifier_mac.mm)
+  target_link_libraries(cc-notify PRIVATE
+        "-framework Cocoa"
         "-framework UserNotifications"
     )
-    target_compile_options(cc-notify PRIVATE -Wall -Wextra
+  target_compile_options(cc-notify PRIVATE -Wall -Wextra
         $<$<CONFIG:Release>:-O2>)
 
-elseif(UNIX)
-    # Linux / WSL: libnotify C API (→ D-Bus org.freedesktop.Notifications)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(LIBNOTIFY REQUIRED libnotify)
+  # UNUserNotificationCenter requires a valid app bundle.
+  # Package the binary as cc-notify.app so the system can resolve it.
+  set_target_properties(cc-notify PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER  "com.cc-notify.app"
+        MACOSX_BUNDLE_BUNDLE_NAME     "cc-notify"
+        MACOSX_BUNDLE_BUNDLE_VERSION  "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
+        MACOSX_BUNDLE_INFO_PLIST      "${CMAKE_SOURCE_DIR}/macos/Info.plist.in"
+    )
 
-    target_sources(cc-notify PRIVATE src/notifier_unix.cpp)
-    target_include_directories(cc-notify PRIVATE ${LIBNOTIFY_INCLUDE_DIRS})
-    target_link_libraries(cc-notify PRIVATE ${LIBNOTIFY_LIBRARIES})
-    target_compile_options(cc-notify PRIVATE
+    # Ad-hoc code sign so macOS will honour UNUserNotificationCenter requests.
+    add_custom_command(TARGET cc-notify POST_BUILD
+        COMMAND codesign --force --deep --sign -
+                "$<TARGET_BUNDLE_DIR:cc-notify>"
+        COMMENT "Ad-hoc signing cc-notify.app"
+    )
+
+elseif(UNIX)
+  # Linux / WSL: libnotify C API (→ D-Bus org.freedesktop.Notifications)
+  find_package(PkgConfig REQUIRED)
+  pkg_check_modules(LIBNOTIFY REQUIRED libnotify)
+
+  target_sources(cc-notify PRIVATE src/notifier_unix.cpp)
+  target_include_directories(cc-notify PRIVATE ${LIBNOTIFY_INCLUDE_DIRS})
+  target_link_libraries(cc-notify PRIVATE ${LIBNOTIFY_LIBRARIES})
+  target_compile_options(cc-notify PRIVATE
         ${LIBNOTIFY_CFLAGS_OTHER}
         -Wall -Wextra
         $<$<CONFIG:Release>:-O2>)
 
-    # Strip release binary for smaller size.
-    target_link_options(cc-notify PRIVATE $<$<CONFIG:Release>:-s>)
+  # Strip release binary for smaller size.
+  target_link_options(cc-notify PRIVATE $<$<CONFIG:Release>:-s>)
 endif()
 
 # ── Install ───────────────────────────────────────────────────────────────────
 include(GNUInstallDirs)
-install(TARGETS cc-notify RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(APPLE)
+  install(TARGETS cc-notify BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR})
+else()
+  install(TARGETS cc-notify RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 # ── Build summary ─────────────────────────────────────────────────────────────
 message(STATUS "cc-notify ${PROJECT_VERSION}")

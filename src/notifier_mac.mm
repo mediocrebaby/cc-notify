@@ -3,34 +3,43 @@
 
 #include "notifier.h"
 
-#import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 #import <UserNotifications/UserNotifications.h>
 
 // UNUserNotificationCenter requires:
 //   - macOS 10.14+
-//   - A run-loop to receive async callbacks (we use dispatch semaphores)
-//
-// For CLI tools without a proper app bundle the system may show the
-// notification under "Terminal" (or whatever launched us), which is fine.
+//   - An active NSRunLoop so the permission dialog can be presented
+//     and completion handlers can fire on the main thread.
+//   - Ad-hoc code signature (see CMakeLists.txt POST_BUILD step)
+//   - UNAuthorizationOptionProvisional for silent grant without a dialog
 
 bool sendNotification(const std::string& title, const std::string& message) {
     @autoreleasepool {
+        NSApplication* app = [NSApplication sharedApplication];
+        [app setActivationPolicy:NSApplicationActivationPolicyAccessory];
+
         UNUserNotificationCenter* center =
             [UNUserNotificationCenter currentNotificationCenter];
 
-        // ── 1. Request permission (if not already granted) ───────────────
-        dispatch_semaphore_t permSem = dispatch_semaphore_create(0);
-        __block BOOL granted = NO;
+        // ── 1. Request permission ─────────────────────────────────────────
+        // Provisional: system grants immediately without a dialog.
+        // Notifications appear quietly in Notification Centre; the user can
+        // promote them to banners by clicking "Keep" on the first one.
+        __block BOOL permDone = NO;
+        __block BOOL granted  = NO;
 
-        [center requestAuthorizationWithOptions:UNAuthorizationOptionAlert
+        [center requestAuthorizationWithOptions:
+                    UNAuthorizationOptionAlert | UNAuthorizationOptionProvisional
                              completionHandler:^(BOOL g, NSError*) {
-            granted = g;
-            dispatch_semaphore_signal(permSem);
+            granted  = g;
+            permDone = YES;
         }];
 
-        // Wait up to 5 s for the user to respond to the permission dialog.
-        dispatch_semaphore_wait(permSem,
-            dispatch_time(DISPATCH_TIME_NOW, 5 * (int64_t)NSEC_PER_SEC));
+        NSDate* permDeadline = [NSDate dateWithTimeIntervalSinceNow:30.0];
+        while (!permDone && [permDeadline timeIntervalSinceNow] > 0) {
+            [[NSRunLoop currentRunLoop]
+                runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        }
 
         if (!granted) return false;
 
@@ -41,23 +50,25 @@ bool sendNotification(const std::string& title, const std::string& message) {
         content.body  = [NSString stringWithUTF8String:message.c_str()];
 
         // ── 3. Post the notification ──────────────────────────────────────
-        // trigger = nil means "deliver immediately"
         UNNotificationRequest* req =
             [UNNotificationRequest requestWithIdentifier:@"cc-notify"
                                                 content:content
                                                 trigger:nil];
 
-        dispatch_semaphore_t postSem = dispatch_semaphore_create(0);
-        __block BOOL posted = NO;
+        __block BOOL postDone = NO;
+        __block BOOL posted   = NO;
 
         [center addNotificationRequest:req
                withCompletionHandler:^(NSError* err) {
-            posted = (err == nil);
-            dispatch_semaphore_signal(postSem);
+            posted   = (err == nil);
+            postDone = YES;
         }];
 
-        dispatch_semaphore_wait(postSem,
-            dispatch_time(DISPATCH_TIME_NOW, 5 * (int64_t)NSEC_PER_SEC));
+        NSDate* postDeadline = [NSDate dateWithTimeIntervalSinceNow:5.0];
+        while (!postDone && [postDeadline timeIntervalSinceNow] > 0) {
+            [[NSRunLoop currentRunLoop]
+                runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+        }
 
         return posted;
     }
