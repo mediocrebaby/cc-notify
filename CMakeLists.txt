@@ -35,6 +35,17 @@ if(WIN32)
         MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   target_compile_definitions(cc-notify PRIVATE _CRT_SECURE_NO_WARNINGS)
 
+  # Copy icon files to the output directory after build.
+  add_custom_command(TARGET cc-notify POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+              "${CMAKE_SOURCE_DIR}/win/icon.png"
+              "$<TARGET_FILE_DIR:cc-notify>/icon.png"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+              "${CMAKE_SOURCE_DIR}/resources/icons_ico/icon_64x64.ico"
+              "$<TARGET_FILE_DIR:cc-notify>/icon.ico"
+      COMMENT "Copying icon files to output directory"
+  )
+
 elseif(APPLE)
   # macOS: Objective-C++ source + UserNotifications framework (macOS 10.14+)
   enable_language(OBJCXX)
