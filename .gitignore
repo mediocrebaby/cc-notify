@@ -2,6 +2,9 @@
 build/
 out/
 
+# Node.js
+node_modules/
+
 # CMake generated files
 CMakeCache.txt
 CMakeFiles/

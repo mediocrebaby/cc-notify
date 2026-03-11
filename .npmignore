@@ -1,0 +1,49 @@
+# Source code
+src/
+macos/
+win/
+
+# Build artifacts
+build/
+out/
+
+# Resources (not needed in published package)
+resources/
+
+# Platform sub-packages (each published separately)
+npm-packages/
+
+# CI / GitHub
+.github/
+
+# CMake
+CMakeLists.txt
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# Compiled objects
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# Claude Code local settings
+.claude/

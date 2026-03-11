@@ -1,0 +1,39 @@
+{
+  "name": "cc-notify",
+  "version": "1.0.0",
+  "description": "Native OS notification tool for Claude Code task completion",
+  "bin": {
+    "cc-notify": "bin/cc-notify.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "files": [
+    "bin/cc-notify.js",
+    "scripts/postinstall.js",
+    "LICENSE",
+    "README.md"
+  ],
+  "optionalDependencies": {
+    "@cc-notify/darwin-arm64": "1.0.0",
+    "@cc-notify/darwin-x64": "1.0.0",
+    "@cc-notify/linux-x64": "1.0.0",
+    "@cc-notify/win32-x64": "1.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "notification",
+    "hook",
+    "notify"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wangrun/cc-notify.git"
+  }
+}

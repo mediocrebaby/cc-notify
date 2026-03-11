@@ -1,0 +1,15 @@
+{
+  "name": "@cc-notify/darwin-arm64",
+  "version": "1.0.0",
+  "description": "cc-notify binary for macOS Apple Silicon (arm64)",
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "files": [
+    "bin/"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wangrun/cc-notify.git"
+  }
+}
