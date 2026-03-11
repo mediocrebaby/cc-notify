@@ -7,12 +7,14 @@
 
 #include "notifier.h"
 
+#include <string>
+
+#include <windows.h>
+
 #include <propkey.h>
 #include <propvarutil.h>
 #include <shlobj.h>
 #include <shobjidl.h>
-#include <string>
-#include <windows.h>
 
 #include <winrt/Windows.Data.Xml.Dom.h>
 #include <winrt/Windows.Foundation.Collections.h>
@@ -26,9 +28,9 @@ using namespace winrt::Windows::Data::Xml::Dom;
 using namespace winrt::Windows::UI::Notifications;
 
 // The AppUserModelID we register and use.
-static constexpr wchar_t kAumid[] = L"Claude Code";
+static constexpr wchar_t kAumid[] = L"cc-notify";
 static constexpr wchar_t kRegKeyPath[] =
-    L"SOFTWARE\\Classes\\AppUserModelId\\Claude Code";
+    L"SOFTWARE\\Classes\\AppUserModelId\\cc-notify";
 
 // Return directory containing the running executable (with trailing backslash).
 static std::wstring exeDir() {
@@ -75,7 +77,7 @@ static void ensureStartMenuShortcut() {
     return;
   const std::wstring lnkPath =
       std::wstring(appdataPath) +
-      L"\\Microsoft\\Windows\\Start Menu\\Programs\\Claude Code.lnk";
+      L"\\Microsoft\\Windows\\Start Menu\\Programs\\cc-notify.lnk";
 
   // Get exe path and icon.ico path.
   wchar_t exePath[MAX_PATH] = {};
@@ -143,7 +145,7 @@ static void ensureAumidRegistered() {
     return;
 
   // DisplayName  — shown in Windows Settings > Notifications.
-  static constexpr wchar_t kDisplayName[] = L"Claude Code";
+  static constexpr wchar_t kDisplayName[] = L"cc-notify";
   ::RegSetValueExW(
       hKey, L"DisplayName", 0, REG_SZ,
       reinterpret_cast<const BYTE *>(kDisplayName),
