@@ -7,6 +7,7 @@
 
 #include "notifier.h"
 
+#include <algorithm>
 #include <string>
 
 #include <windows.h>
@@ -151,6 +152,16 @@ static void ensureAumidRegistered() {
       reinterpret_cast<const BYTE *>(kDisplayName),
       static_cast<DWORD>((::wcslen(kDisplayName) + 1) * sizeof(wchar_t)));
 
+  // IconUri — absolute path to the icon; the notification platform reads this
+  // directly and it takes effect immediately without relying on shortcut caching.
+  const std::wstring icoPath = sidecarPath(L"icon.png");
+  if (!icoPath.empty()) {
+    ::RegSetValueExW(
+        hKey, L"IconUri", 0, REG_SZ,
+        reinterpret_cast<const BYTE *>(icoPath.c_str()),
+        static_cast<DWORD>((icoPath.size() + 1) * sizeof(wchar_t)));
+  }
+
   ::RegCloseKey(hKey);
 }
 
@@ -173,12 +184,15 @@ bool sendNotification(const std::string &title, const std::string &message) {
     // Build the ToastGeneric XML template.
     // appLogoOverride shows icon.png (if present) inside the notification
     // bubble.
-    const std::wstring pngPath = sidecarPath(L"icon.png");
+    const std::wstring pngPath = sidecarPath(L"claude.png");
+    // Convert Windows path separators for the file:/// URI.
+    std::wstring pngUri = pngPath;
+    std::replace(pngUri.begin(), pngUri.end(), L'\\', L'/');
     const std::wstring logoXml =
-        pngPath.empty()
+        pngUri.empty()
             ? std::wstring{}
             : (L"      <image placement=\"appLogoOverride\" src=\"file:///" +
-               pngPath + L"\"/>");
+               pngUri + L"\"/>");
 
     XmlDocument xml;
     xml.LoadXml(L"<toast>"

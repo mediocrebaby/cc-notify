@@ -39,10 +39,10 @@ if(WIN32)
   add_custom_command(TARGET cc-notify POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
               "${CMAKE_SOURCE_DIR}/win/icon.png"
-              "$<TARGET_FILE_DIR:cc-notify>/icon.png"
+              "$<TARGET_FILE_DIR:cc-notify>/claude.png"
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
-              "${CMAKE_SOURCE_DIR}/resources/icons_ico/icon_64x64.ico"
-              "$<TARGET_FILE_DIR:cc-notify>/icon.ico"
+              "${CMAKE_SOURCE_DIR}/resources/icons_png/icon_48.png"
+              "$<TARGET_FILE_DIR:cc-notify>/icon.png"
       COMMENT "Copying icon files to output directory"
   )
 
