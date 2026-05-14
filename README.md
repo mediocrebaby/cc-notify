@@ -55,10 +55,10 @@ sudo dnf install libnotify-devel pkgconf
 ### Option 1 — npm (recommended)
 
 ```bash
-npm install -g cc-notify
+npm install -g @mediocrebaby/cc-notify
 ```
 
-The main `cc-notify` package is a thin Node.js wrapper. The pre-compiled native binary for your OS / CPU is fetched automatically via an `optionalDependencies` entry — npm only downloads the one platform package that matches your machine:
+The main `@mediocrebaby/cc-notify` package is a thin Node.js wrapper. The pre-compiled native binary for your OS / CPU is fetched automatically via an `optionalDependencies` entry — npm only downloads the one platform package that matches your machine:
 
 | Platform | Platform package |
 |----------|------------------|
@@ -77,7 +77,7 @@ cc-notify --test
 
 > **Linux**: you still need `libnotify` installed at runtime — see [Linux: install libnotify](#linux-install-libnotify).
 >
-> **WSL**: install in WSL first; if no display server is reachable, install `cc-notify` separately on Windows (`npm install -g cc-notify` from PowerShell) so WSL interop can fall back to `cc-notify.exe`.
+> **WSL**: install in WSL first; if no display server is reachable, install `cc-notify` separately on Windows (`npm install -g @mediocrebaby/cc-notify` from PowerShell) so WSL interop can fall back to `cc-notify.exe`.
 
 ### Option 2 — build from source
 

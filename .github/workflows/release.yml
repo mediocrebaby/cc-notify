@@ -246,9 +246,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # ── Publish main package ───────────────────────────────────────────────
-      - name: Publish cc-notify
-        run: npm publish
+      # ── Publish main package (scoped → requires --access=public) ─────────
+      - name: Publish @mediocrebaby/cc-notify
+        run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
