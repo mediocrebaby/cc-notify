@@ -77,7 +77,7 @@ cc-notify --test
 
 > **Linux**: you still need `libnotify` installed at runtime — see [Linux: install libnotify](#linux-install-libnotify).
 >
-> **WSL**: install in WSL first; if no display server is reachable, install `cc-notify` separately on Windows (`npm install -g @mediocrebaby/cc-notify` from PowerShell) so WSL interop can fall back to `cc-notify.exe`.
+> **WSL**: install in WSL first; if no display server is reachable, also run `npm install -g @mediocrebaby/cc-notify` on the Windows side (from PowerShell). The Windows install automatically places `cc-notify.exe` on your PATH (npm global bin directory), so the WSL build's interop fallback can find and run it — no manual copying required.
 
 ### Option 2 — build from source
 
